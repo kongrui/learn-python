@@ -1,7 +1,11 @@
 import os
 import numpy as np
+import matplotlib
+matplotlib.use('agg')
+
 import matplotlib.pyplot as plt
-from scipy.signal import welch, hanning, boxcar, resample
+from scipy.signal import welch, hanning, resample
+from scipy.signal.windows import boxcar
 from scipy import interpolate
 
 def dfft():
@@ -16,10 +20,17 @@ def dfft():
   y = np.loadtxt('data.512.csv', delimiter=",", unpack=True)
   print(y.size)
   res = np.fft.rfft(y)
+  np.savetxt("rfft.csv", res, delimiter=",")
+  # 255.248808144
   print (res.size)
-  mag = np.absolute(res)/ fs
+  mag = np.absolute(res)
   print (mag.max())
-  np.savetxt("rfft.csv", mag, delimiter=",")
+  np.savetxt("rfft.mag.csv", mag, delimiter=",")
+  conjugate = np.square(mag)
+  np.savetxt("rfft.conjugate.csv", conjugate, delimiter=",")
+  magYuan = np.absolute(res) / fs
+  np.savetxt("rfft.mag.yuan.csv", magYuan, delimiter=",")
+  print (magYuan.max())
   # 255.248808144
   # 306.195
 
@@ -31,14 +42,15 @@ def singleSegment():
   fs = N * 1.0 / (3 - 0)
   nblock = N
   win = boxcar(nblock)
-  f, Pxxf = welch(datos, fs, window=win, nfft=nblock, return_onesided=True, detrend=False)
+  f, Pxxf = welch(datos, fs, window=win, nfft=nblock, noverlap=0, return_onesided=True, detrend=False)
   print(Pxxf.max())
   print(Pxxf.size)
   plt.scatter(f, Pxxf)
   plt.grid()
   plt.show()
-  # win=256 0.472064843756
-  # win=128 0.254662254953
+  # 1.49 same
+  # 1.4912098859928722
+  # scale = 1.0 / (fs * (win*win).sum())  (t2-t1)/N^2  3/262144
 
 def doubleSegment():
   y = np.loadtxt('data.512.csv', delimiter=",", unpack=True)
@@ -46,7 +58,7 @@ def doubleSegment():
   print(datos.size)
   N = 512
   fs = N * 1.0 / (3 - 0)
-  nblock = N
+  nblock = N / 2
   win = boxcar(nblock)
   f, Pxxf = welch(datos, fs, window=win, nfft=nblock, return_onesided=True, detrend=False)
   print(Pxxf.max())
@@ -54,8 +66,23 @@ def doubleSegment():
   plt.scatter(f, Pxxf)
   plt.grid()
   plt.show()
-  # win=256 0.472064843756
-  # win=128 0.254662254953
+  # 0.7456053206019085 match
+
+def hanningSegment():
+  # does not work
+  y = np.loadtxt('data.512.csv', delimiter=",", unpack=True)
+  datos = y
+  print(datos.size)
+  N = 512
+  fs = N * 1.0 / (3 - 0)
+  nblock = N
+  win = hanning(nblock)
+  f, Pxxf = welch(datos, fs, window=win, nfft=nblock, return_onesided=True, detrend=False)
+  print(Pxxf.max())
+  print(Pxxf.size)
+  plt.scatter(f, Pxxf)
+  plt.grid()
+  plt.show()
 
 def runPSD2():
   x = np.linspace(0, 10, 100001)
@@ -83,7 +110,6 @@ def runPSD():
   WORK_DIR = os.path.dirname(os.path.realpath(__file__))
   print(WORK_DIR)
   xo, yo = np.loadtxt(WORK_DIR + '/data.csv', delimiter=",", unpack=True)
-  yo = Y_DATA
   x = np.linspace(0, 3, 512)
   dt = x[1] - x[0]
   fs = 1 / dt
@@ -120,4 +146,7 @@ def main():
 if __name__ == "__main__":
   #runPSD()
   #dfft()
-  singleSegment()
+  #doubleSegment()
+  #hanningSegment()
+  #singleSegment()
+  doubleSegment()
