@@ -34,6 +34,27 @@ def dfft():
   # 255.248808144
   # 306.195
 
+def dfftWithSampling():
+  fs = 64
+  xo, yo = np.loadtxt('data.csv', delimiter=",", unpack=True)
+  f = interpolate.interp1d(xo, yo)
+  x = np.linspace(0, 3, num=fs*2, endpoint=False)
+  y = f(x)
+  np.savetxt("sampling.256.csv", zip(x,y), delimiter=",")
+  print(y.size)
+  res = np.fft.rfft(y)
+  np.savetxt("rfft.256.csv", res, delimiter=",")
+  # 255.248808144
+  print (res.size)
+  mag = np.absolute(res)
+  print ("mag.max.rui=%s" % mag.max())
+  np.savetxt("rfft.mag.256.csv", mag, delimiter=",")
+  conjugate = np.square(mag)
+  np.savetxt("rfft.conjugate.256.csv", conjugate, delimiter=",")
+  magYuan = np.absolute(res) / fs
+  np.savetxt("rfft.mag.yuan.256.csv", magYuan, delimiter=",")
+  print ("mag.max.yuan=%s" % magYuan.max())
+
 def singleSegment():
   y = np.loadtxt('data.512.csv', delimiter=",", unpack=True)
   datos = y
@@ -139,9 +160,15 @@ def runWin():
   plt.xlabel("Sample")
   plt.show()
 
+def windowProduct():
+  # scale = 1.0 / (fs * (win*win).sum())
+  win1 = np.array([1,1,1,1])
+  win2 = np.array([1,1,1,1])
+  scale = (win1 * win2).sum()
+  print(scale)
+
 def main():
   print("Hello World!")
-
 
 if __name__ == "__main__":
   #runPSD()
@@ -149,4 +176,6 @@ if __name__ == "__main__":
   #doubleSegment()
   #hanningSegment()
   #singleSegment()
-  doubleSegment()
+  #doubleSegment()
+  #dfftWithSampling()
+  windowProduct()
