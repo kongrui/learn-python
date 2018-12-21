@@ -8,31 +8,95 @@ from scipy.signal import welch, hanning, resample
 from scipy.signal.windows import boxcar
 from scipy import interpolate
 
+
+def brutalDFT(x):
+  """
+  Compute the discrete Fourier Transform of the 1D array x
+  :param x: (array)
+
+  https://www.ritchievink.com/blog/2017/04/23/understanding-the-fourier-transform-by-example/
+  N = number of samples
+  n = current sample
+  xn = value of the sinal at time n
+  k = current frequency (0 Hz to N-1 Hz)
+
+  https://stackoverflow.com/questions/39269804/fft-normalization-with-numpy
+  normalization
+
+  https://docs.scipy.org/doc/numpy/reference/routines.fft.html#implementation-details
+  Normalization
+  The default normalization has the direct transforms unscaled and the inverse transforms are scaled by 1/n.
+  It is possible to obtain unitary transforms by setting the keyword argument norm to "ortho" (default is None)
+  so that both direct and inverse transforms will be scaled by 1/\sqrt{n}.
+
+  """
+
+  N = x.size
+  n = np.arange(N)
+  k = n.reshape((N, 1))
+  e = np.exp(-2j * np.pi * k * n / N)
+  return np.dot(e, x)
+
 def dfft():
-  fs = 256
-  #y = np.loadtxt('data.512.csv', delimiter=",", unpack=True)
-  xo, yo = np.loadtxt('data.csv', delimiter=",", unpack=True)
-  #win = boxcar(yo.size)
-  f = interpolate.interp1d(xo, yo)
-  x = np.linspace(1, 3, num=fs*2, endpoint=False)
-  y = f(x)
-  np.savetxt("sampling.csv", zip(x,y), delimiter=",")
+
   y = np.loadtxt('data.512.csv', delimiter=",", unpack=True)
-  print(y.size)
   res = np.fft.rfft(y)
   np.savetxt("rfft.csv", res, delimiter=",")
-  # 255.248808144
-  print (res.size)
   mag = np.absolute(res)
-  print (mag.max())
+  print ("mag.max.rui = %s" % mag.max())
   np.savetxt("rfft.mag.csv", mag, delimiter=",")
-  conjugate = np.square(mag)
-  np.savetxt("rfft.conjugate.csv", conjugate, delimiter=",")
+
+  fs = 256
   magYuan = np.absolute(res) / fs
+  print ("mag.max.yuan - %s" % magYuan.max())
   np.savetxt("rfft.mag.yuan.csv", magYuan, delimiter=",")
-  print (magYuan.max())
+
+  # scale has be done manually, ortho is a special scaling, yuan's code has issue on scale by N already
+  res = np.fft.rfft(y, norm="ortho") # output *= 1 / sqrt(n)
+  mag = np.absolute(res)
+  print ("mag.max.ortho - %s" % mag.max())
+  np.savetxt("rfft.ortho.csv", mag, delimiter=",")
   # 255.248808144
   # 306.195
+
+def dfftWhyNorm():
+
+  # https://stackoverflow.com/questions/19975030/amplitude-of-numpys-fft-results-is-to-be-multiplied-by-sampling-period
+  #
+  #
+
+  # https://dsp.stackexchange.com/questions/11376/why-are-magnitudes-normalised-during-synthesis-idft-not-analysis-dft
+  # In most examples and FFT code that I've seen, the output (frequency magnitudes) of the forward DFT operation
+  # is scaled by N -- i.e. instead of giving you the magnitude of each frequency bin, it gives you N times the magnitude.
+  #
+  # fft_mag = fft_mag * 2 / n
+
+  #
+  # Normalize the amplitude by number of bins and multiply by 2
+  # because we removed second half of spectrum above the Nyqist frequency
+  # and energy must be preserved
+  # fft_mag = fft_mag * 2 / n
+  #
+  #
+  xo, yo = np.loadtxt('data.csv', delimiter=",", unpack=True)
+  f = interpolate.interp1d(xo, yo)
+
+  fs = 64
+  x = np.linspace(0, 3, num=fs*2, endpoint=False)
+  y = f(x)
+  res = np.fft.rfft(y)
+  mag = np.absolute(res) / fs
+  print ("mag.max.64=%s" % mag.max())
+
+  fs = 128
+  x = np.linspace(0, 3, num=fs*2, endpoint=False)
+  y = f(x)
+  res = np.fft.rfft(y) / fs
+  mag = np.absolute(res)
+  print ("mag.max.128=%s" % mag.max())
+
+  # in your code, check if there is a norm parameter to turn off 1/N
+  # since scale is off by default, later on, we need to scale M and half
 
 def dfftWithSampling():
   fs = 64
@@ -173,9 +237,10 @@ def main():
 if __name__ == "__main__":
   #runPSD()
   #dfft()
+  dfftWhyNorm()
   #doubleSegment()
   #hanningSegment()
   #singleSegment()
   #doubleSegment()
   #dfftWithSampling()
-  windowProduct()
+  #windowProduct()
