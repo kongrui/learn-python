@@ -102,7 +102,9 @@ def show_word(word):
         print(open(f).read())
     f = DIR_OUTPUT.format(word=word, ext=".txt")
     if os.path.exists(f):
-        print(open(f).read())
+        original_text = open(f).read()
+        text = os.linesep.join([ll.rstrip() for ll in original_text.splitlines() if ll.strip()])
+        print(text)
 
 def count_down(duration):
     for remaining in range(duration, 0, -1):
