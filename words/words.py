@@ -50,7 +50,7 @@ def get_word(word):
     dst_audio = DIR_OUTPUT.format(word=word, ext=".mp3")
     dst_txt = DIR_OUTPUT.format(word=word, ext=".txt")
     if os.path.exists(dst_audio) and os.path.exists(dst_txt):
-        return True
+        return
     page = urllib.request.urlopen(URL_WORD.format(word=word))
     soup = BeautifulSoup(page, from_encoding=page.info().get_param('charset'), features="html.parser")
     snd2_spans = soup.find_all(class_="snd2")
@@ -70,42 +70,33 @@ def get_word(word):
         else:
             print("ERROR: audio is not found - " + word)
             save_page(word, soup.prettify(), ".mp3")
-            return False
 
     definition = soup.find(id="Definition")
     if not definition:
         print("ERROR: definition is not found - " + word)
         save_page(word, soup.prettify(), ".def")
-        return False
+        return
 
     def_slst = definition.find_all(class_="sds-list")
     txt = ""
     for d in def_slst:
-        txt = txt + os.linesep + d.get_text()
+        txt = txt + os.linesep + d.get_text().strip()
     def_single = definition.find_all(class_="ds-single")
     for d in def_single:
-        txt = txt + os.linesep + d.get_text()
+        txt = txt + os.linesep + d.get_text().strip()
     def_lst = definition.find_all(class_="ds-list")
     for d in def_lst:
-        txt = txt + os.linesep + d.get_text()
-    if txt:
-        save_definition(word, txt)
+        txt = txt + os.linesep + d.get_text().strip()
+    if txt.strip():
+        save_definition(word, txt.strip())
     else:
         print("ERROR: details is not found - " + word)
         save_page(word, definition.prettify(), ".def")
-        return False
-
-    return True
 
 def show_word(word):
-    print("--------------------------------")
-    print("** " + word + " **")
-    print("--------------------------------")
     f = DIR_OUTPUT.format(word=word, ext=".mp3")
     if os.path.exists(f):
         playsound.playsound(f, True)
-    else:
-        print("ERROR : audio is not found", f)
     f = DIR_OUTPUT.format(word=word, ext=".mp3.txt")
     if os.path.exists(f):
         print(open(f).read())
@@ -131,7 +122,10 @@ def process(word):
     if reply[0] == 'n':
         return False
     try:
-        ret = get_word(word)
+        print("--------------------------------")
+        print("** " + word + " **")
+        print("--------------------------------")
+        get_word(word)
         show_word(word)
     except:
         print('now sleeping for 120 seconds')
