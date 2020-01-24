@@ -134,7 +134,7 @@ def process(word):
         count_down(30)
 
 if __name__ == "__main__":
-    with open(os.path.join(DATA_DIR, 'words.txt'), 'r') as f:
+    with open(os.path.join(DATA_DIR, 'words.lst'), 'r') as f:
         for line in f:
             for word in line.split():
                 if word:
