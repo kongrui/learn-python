@@ -9,7 +9,12 @@ from bs4 import BeautifulSoup
 import urllib.request
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, 'data')
+PARENT_DIR = os.path.dirname(BASE_DIR)
+DATA_DIR = os.path.join(PARENT_DIR, 'data')
+
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
+
 DIR_OUTPUT = os.path.join(DATA_DIR, '{word}{ext}')
 
 URL_WORD = 'https://www.thefreedictionary.com/{word}'
@@ -20,7 +25,7 @@ def save_audio(word, snd):
     dst = DIR_OUTPUT.format(word=word, ext=".mp3")
     if not os.path.exists(dst):
         urllib.request.urlretrieve(url, dst)
-        dst = DIR_OUTPUT.format(word=word, ext=".url")
+        dst = DIR_OUTPUT.format(word=word, ext=".mp3.txt")
         file = open(dst, "w")
         file.write(url)
         file.close()
@@ -70,7 +75,7 @@ def get_word(word):
     definition = soup.find(id="Definition")
     if not definition:
         print("ERROR: definition is not found - " + word)
-        save_page(word, soup.prettify(), ".ext")
+        save_page(word, soup.prettify(), ".def")
         return False
 
     def_slst = definition.find_all(class_="sds-list")
@@ -87,7 +92,7 @@ def get_word(word):
         save_definition(word, txt)
     else:
         print("ERROR: details is not found - " + word)
-        save_page(word, definition.prettify(), ".ext")
+        save_page(word, definition.prettify(), ".def")
         return False
 
     return True
@@ -101,10 +106,10 @@ def show_word(word):
         playsound.playsound(f, True)
     else:
         print("ERROR : audio is not found", f)
-    f = DIR_OUTPUT.format(word=word, ext=".txt")
+    f = DIR_OUTPUT.format(word=word, ext=".mp3.txt")
     if os.path.exists(f):
         print(open(f).read())
-    f = DIR_OUTPUT.format(word=word, ext=".url")
+    f = DIR_OUTPUT.format(word=word, ext=".txt")
     if os.path.exists(f):
         print(open(f).read())
 
