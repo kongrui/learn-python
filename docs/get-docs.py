@@ -42,8 +42,33 @@ def fetch_url_list(url, patterns, yes_or_no=True):
                 urllst.append(link['href'])
     return urllst
 
-def download_file_from_google_drive(id):
+def get_id_google_drive(link):
+    p = re.compile("drive.google.com.open.id.(.*)")
+    m = p.search(link)
+    id = None
+    if m:
+        id = m.group(1)
+    else:
+        p = re.compile("drive.google.com.file.d.(.*).view?")
+        m = p.search(link)
+        if m:
+            id = m.group(1)
+    return id
 
+def download_files_from_google_drive():
+    p = os.path.join(DATA_DIR, 'urls.txt')
+    with open(p) as f:
+        links = [line.rstrip() for line in f]
+    for link in links:
+        if "drive.google.com" in link:
+            id = get_id_google_drive(link)
+            if id:
+                print('Downloading: ' + link)
+                download_file_from_google_drive(id)
+            else:
+                print("ERROR -  GDOC : id is not found")
+
+def download_file_from_google_drive(id):
     def get_file_name_google_drive(response):
         print(response.headers)
         if 'Content-Disposition' in response.headers:
@@ -82,10 +107,10 @@ def download_file_from_google_drive(id):
 
     name = get_file_name_google_drive(response)
     if name:
-        destination = os.path.join(DATA_DIR, name.replace(" ", "_"))
+        destination = os.path.join(DATA_DIR, name.lower().replace(" ", "_"))
     else:
         destination = os.path.join(DATA_DIR, id + ".pdf")
     save_response_content(response, destination)
 
 if __name__ == "__main__":
-    pass
+    download_files_from_google_drive()
