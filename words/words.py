@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-import playsound
-import time
-import sys
 import os
 import os.path
-from bs4 import BeautifulSoup
+import sys
+import time
 import urllib.request
+
+import playsound
+from bs4 import BeautifulSoup
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 PARENT_DIR = os.path.dirname(BASE_DIR)
@@ -20,6 +21,7 @@ DIR_OUTPUT = os.path.join(DATA_DIR, '{word}{ext}')
 URL_WORD = 'https://www.thefreedictionary.com/{word}'
 URL_PRONOUCIATION = 'http://img2.tfd.com/pron/mp3/{snd}.mp3'
 
+
 def save_audio(word, snd):
     url = URL_PRONOUCIATION.format(snd=snd)
     dst = DIR_OUTPUT.format(word=word, ext=".mp3")
@@ -30,6 +32,7 @@ def save_audio(word, snd):
         file.write(url)
         file.close()
 
+
 def save_definition(word, definition):
     dst = DIR_OUTPUT.format(word=word, ext=".txt")
     if not os.path.exists(dst):
@@ -37,22 +40,28 @@ def save_definition(word, definition):
         file.write(definition)
         file.close()
 
-def save_page(word, page, ext):
-    ext = ext + ".html"
-    dst = DIR_OUTPUT.format(word=word, ext=ext)
+
+def save_page(word, page_full):
+    dst = DIR_OUTPUT.format(word=word, ext=".html")
     if not os.path.exists(dst):
         file = open(dst, "w")
-        file.write(page)
+        file.write(page_full)
         file.close()
 
 
-def get_word(word):
-    dst_audio = DIR_OUTPUT.format(word=word, ext=".mp3")
-    dst_txt = DIR_OUTPUT.format(word=word, ext=".txt")
-    if os.path.exists(dst_audio) and os.path.exists(dst_txt):
-        return
+def get_word_page(word):
     page = urllib.request.urlopen(URL_WORD.format(word=word))
     soup = BeautifulSoup(page, from_encoding=page.info().get_param('charset'), features="html.parser")
+    save_page(word, soup.prettify())
+
+
+def get_word_resource(word):
+    dst_page = DIR_OUTPUT.format(word=word, ext=".html")
+    if not os.path.exists(dst_page):
+        get_word_page(word)
+    file = open(dst_page, "r")
+    soup = BeautifulSoup(file.read(), features="html.parser")
+    file.close()
     snd2_spans = soup.find_all(class_="snd2")
     sndUS = ""
     sndUK = ""
@@ -69,29 +78,31 @@ def get_word(word):
             save_audio(word, sndUK)
         else:
             print("ERROR: audio is not found - " + word)
-            save_page(word, soup.prettify(), ".mp3")
 
     definition = soup.find(id="Definition")
     if not definition:
         print("ERROR: definition is not found - " + word)
-        save_page(word, soup.prettify(), ".def")
         return
-
-    def_slst = definition.find_all(class_="sds-list")
+    para_defs = definition.find_all(class_="pseg")
     txt = ""
-    for d in def_slst:
-        txt = txt + os.linesep + d.get_text().strip()
-    def_single = definition.find_all(class_="ds-single")
-    for d in def_single:
-        txt = txt + os.linesep + d.get_text().strip()
-    def_lst = definition.find_all(class_="ds-list")
-    for d in def_lst:
-        txt = txt + os.linesep + d.get_text().strip()
+    for one_para in para_defs:
+        word_type = one_para.select_one('i')
+        if word_type:
+            txt = txt + os.linesep + word_type.get_text().strip().replace('\s*\n\s*', '').replace('\s*\r\s*', '')
+        def_lst = one_para.find_all(class_="ds-list")
+        if def_lst:
+            for d in def_lst:
+                txt = txt + os.linesep + d.get_text().strip().replace('\s*\n\s*', '').replace('\s*\r\s*', '')
+            def_slst = one_para.find_all(class_="sds-list")
+            for d in def_slst:
+                txt = txt + os.linesep + d.get_text().strip().replace('\s*\n\s*', '').replace('\s*\r\s*', '')
+
+        def_single = one_para.find_all(class_="ds-single")
+        for d in def_single:
+            txt = txt + os.linesep + d.get_text().strip()
+
     if txt.strip():
         save_definition(word, txt.strip())
-    else:
-        print("ERROR: details is not found - " + word)
-        save_page(word, definition.prettify(), ".def")
 
 def show_word(word):
     f = DIR_OUTPUT.format(word=word, ext=".mp3")
@@ -114,6 +125,7 @@ def count_down(duration):
         time.sleep(1)
     sys.stdout.write("\rComplete!            \n")
 
+
 def process(word):
     cmd = input("\nContinue? Yy/Nn/Aa")
     reply = cmd.lower().strip()
@@ -127,15 +139,20 @@ def process(word):
         print("--------------------------------")
         print("** " + word + " **")
         print("--------------------------------")
-        get_word(word)
+        get_word_resource(word)
         show_word(word)
     except:
         print('now sleeping for 120 seconds')
         count_down(30)
+
 
 if __name__ == "__main__":
     with open(os.path.join(DATA_DIR, 'words.lst'), 'r') as f:
         for line in f:
             for word in line.split():
                 if word:
-                    process(word)
+                    word = word.strip()
+                    if word.startswith('#'):
+                        continue
+                    else:
+                        process(word)
