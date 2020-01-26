@@ -33,14 +33,6 @@ def save_audio(word, snd):
         file.close()
 
 
-def save_definition(word, definition):
-    dst = DIR_OUTPUT.format(word=word, ext=".txt")
-    if not os.path.exists(dst):
-        file = open(dst, "w")
-        file.write(definition)
-        file.close()
-
-
 def save_page(word, page_full):
     dst = DIR_OUTPUT.format(word=word, ext=".html")
     if not os.path.exists(dst):
@@ -57,8 +49,10 @@ def get_word_page(word):
 
 def get_word_resource(word):
     dst_page = DIR_OUTPUT.format(word=word, ext=".html")
-    if not os.path.exists(dst_page):
-        get_word_page(word)
+    if os.path.exists(dst_page):
+        return
+
+    get_word_page(word)
     file = open(dst_page, "r")
     soup = BeautifulSoup(file.read(), features="html.parser")
     file.close()
@@ -102,7 +96,10 @@ def get_word_resource(word):
             txt = txt + os.linesep + d.get_text().strip()
 
     if txt.strip():
-        save_definition(word, txt.strip())
+        dst = DIR_OUTPUT.format(word=word, ext=".txt")
+        file = open(dst, "w")
+        file.write(txt.strip())
+        file.close()
 
 def show_word(word):
     f = DIR_OUTPUT.format(word=word, ext=".mp3")
