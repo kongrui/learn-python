@@ -27,7 +27,8 @@ def save_audio(word, snd):
     dst = DIR_OUTPUT.format(word=word, ext=".mp3")
     if not os.path.exists(dst):
         urllib.request.urlretrieve(url, dst)
-        dst = DIR_OUTPUT.format(word=word, ext=".mp3.txt")
+    dst_txt = DIR_OUTPUT.format(word=word, ext=".mp3.txt")
+    if not os.path.exists(dst_txt):
         file = open(dst, "w")
         file.write(url)
         file.close()
