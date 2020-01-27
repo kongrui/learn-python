@@ -139,9 +139,10 @@ def process(word):
         print("--------------------------------")
         get_word_resource(word)
         show_word(word)
-    except:
-        print('now sleeping for 120 seconds')
-        count_down(30)
+    except Exception as e:
+        print(e)
+        print('now sleeping for 10 seconds')
+        count_down(10)
 
 
 if __name__ == "__main__":
