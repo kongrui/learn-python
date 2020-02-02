@@ -115,10 +115,10 @@ def show_word(word):
 
     f = DIR_OUTPUT.format(word=word, ext=".mp3.txt")
     if os.path.exists(f):
-        print(open(f).read())
+        print(open(f, encoding="utf-8").read())
     f = DIR_OUTPUT.format(word=word, ext=".txt")
     if os.path.exists(f):
-        original_text = open(f).read()
+        original_text = open(f, encoding="utf-8").read()
         text = os.linesep.join([ll.rstrip() for ll in original_text.splitlines() if ll.strip()])
         print(text)
 
