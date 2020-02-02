@@ -30,7 +30,7 @@ def save_audio(word, snd):
         urllib.request.urlretrieve(url, dst)
     dst_txt = DIR_OUTPUT.format(word=word, ext=".mp3.txt")
     if not os.path.exists(dst_txt):
-        file = open(dst, "w")
+        file = open(dst, "w", encoding="utf-8")
         file.write(url)
         file.close()
 
@@ -38,7 +38,7 @@ def save_audio(word, snd):
 def save_page(word, page_full):
     dst = DIR_OUTPUT.format(word=word, ext=".html")
     if not os.path.exists(dst):
-        file = open(dst, "w")
+        file = open(dst, "w", encoding="utf-8")
         file.write(page_full)
         file.close()
 
@@ -99,7 +99,7 @@ def get_word_resource(word):
 
     if txt.strip():
         dst = DIR_OUTPUT.format(word=word, ext=".txt")
-        file = open(dst, "w")
+        file = open(dst, "w", encoding="utf-8")
         file.write(txt.strip())
         file.close()
 
