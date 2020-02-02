@@ -131,7 +131,18 @@ def count_down(duration):
     sys.stdout.write("\rComplete!            \n")
 
 
-def process(word):
+def process(word, bath_mode=False):
+    if bath_mode:
+        try:
+            print("--------------------------------")
+            print("** " + word + " **")
+            print("--------------------------------")
+            get_word_resource(word)
+        except Exception as e:
+            print(e)
+            print('now sleeping for 30 seconds')
+            count_down(30)
+        return
     cmd = input("\nContinue? Yy/Nn/Aa")
     reply = cmd.lower().strip()
     if not reply:
@@ -139,7 +150,7 @@ def process(word):
     if reply[0] == 'a':
         exit(0)
     if reply[0] == 'n':
-        return False
+        return
     try:
         print("--------------------------------")
         print("** " + word + " **")
@@ -161,4 +172,4 @@ if __name__ == "__main__":
                     if word.startswith('#'):
                         continue
                     else:
-                        process(word)
+                        process(word, bath_mode=False)
