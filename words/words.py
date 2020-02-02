@@ -110,7 +110,7 @@ def show_word(word):
         if platform.system() == 'Windows':
             os.system("vlc.exe --qt-start-minimized --play-and-exit " + f)
         else:
-            os.system("/Applications/VLC.app/Contents/MacOS/VLC -I rc --play-and-exit " + f)
+            os.system("/Applications/VLC.app/Contents/MacOS/VLC -I rc --play-and-exit " + f + " --verbose -1 1>/dev/null")
             #playsound.playsound(f, True)
 
     f = DIR_OUTPUT.format(word=word, ext=".mp3.txt")
