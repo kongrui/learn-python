@@ -6,7 +6,7 @@ import sys
 import time
 import urllib.request
 
-import playsound
+#import playsound
 from bs4 import BeautifulSoup
 import platform
 
@@ -110,7 +110,8 @@ def show_word(word):
         if platform.system() == 'Windows':
             os.system("vlc.exe --qt-start-minimized --play-and-exit " + f)
         else:
-            playsound.playsound(f, True)
+            os.system("/Applications/VLC.app/Contents/MacOS/VLC -I rc --play-and-exit " + f)
+            #playsound.playsound(f, True)
 
     f = DIR_OUTPUT.format(word=word, ext=".mp3.txt")
     if os.path.exists(f):
