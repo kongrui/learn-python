@@ -8,6 +8,7 @@ import urllib.request
 
 import playsound
 from bs4 import BeautifulSoup
+import platform
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 PARENT_DIR = os.path.dirname(BASE_DIR)
@@ -105,7 +106,12 @@ def get_word_resource(word):
 def show_word(word):
     f = DIR_OUTPUT.format(word=word, ext=".mp3")
     if os.path.exists(f):
-        playsound.playsound(f, True)
+        # C:\Program Files\VideoLAN\VLC to path
+        if platform.system() == 'Windows':
+            os.system("vlc.exe --qt-start-minimized --play-and-exit " + f)
+        else:
+            playsound.playsound(f, True)
+
     f = DIR_OUTPUT.format(word=word, ext=".mp3.txt")
     if os.path.exists(f):
         print(open(f).read())
