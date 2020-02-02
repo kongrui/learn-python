@@ -55,7 +55,7 @@ def get_word_resource(word):
         return
 
     get_word_page(word)
-    file = open(dst_page, "r")
+    file = open(dst_page, "r", encoding="utf-8")
     soup = BeautifulSoup(file.read(), features="html.parser")
     file.close()
     snd2_spans = soup.find_all(class_="snd2")
