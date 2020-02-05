@@ -167,13 +167,28 @@ def save_response_content(response, destination):
             if chunk:  # filter out keep-alive new chunks
                 f.write(chunk)
 
+def create_url_list(top_urls_list, dest_file):
+    url_lst = []
+    for url in top_urls_list:
+        resp = urllib.request.urlopen(url)
+        soup = BeautifulSoup(resp, from_encoding=resp.info().get_param('charset'), features="html.parser")
+        for link in soup.find_all('a', href=True):
+            url_lst.append(link['href'])
+    f = open(dest_file, 'w')
+    f.write('\n'.join(url_lst))
+    f.close()
+    return url_lst
+
+def load_url_list(src_file):
+    return open(src_file).readlines()
 
 if __name__ == "__main__":
     patterns = []
     patterns.append('https://drive.google.com')
     # patterns.append('pdf')
-    url_list = fetch_url_list(url, patterns, yes_or_no=True)
-    f = open('f.lst', 'w')
-    f.write('\n'.join(url_list))
-    f.close()
+    #url_list = fetch_url_list(url, patterns, yes_or_no=True)
+
+    url_list = ['']
+    create_url_list(url_list, 'urls.txt')
+    download_all(load_url_list('urls.txt'), DST_DIR)
     download_all(url_list, DST_DIR)
