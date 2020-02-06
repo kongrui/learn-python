@@ -6,12 +6,12 @@ import re
 import shutil
 import urllib.request
 from pathlib import Path
-
+import webbrowser
 import requests
 from bs4 import BeautifulSoup
 
 opener = urllib.request.build_opener()
-opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+opener.addheaders = [('User-agent', 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36')]
 urllib.request.install_opener(opener)
 
 def fetch_url_list(url, patterns, yes_or_no=True):
@@ -64,11 +64,13 @@ def download_file(link, destination):
                 pass
             else:
                 print("ERROR: download content", link, flush=True)
+                exit(1)
             return
     else:
         status = download_single_file(link, None, destination)
         if not status:
             print("ERROR: direct download", link, flush=True)
+            exit(1)
 
 
 def download_file_google_usercontent(link, destination):
@@ -78,13 +80,15 @@ def download_file_google_usercontent(link, destination):
     soup = BeautifulSoup(resp, from_encoding=resp.info().get_param('charset'), features="html.parser")
     title = soup.find("meta", property="og:title")
     imgurl = soup.find("meta", property="og:image")
-    print(soup.prettify())
+    # print(soup.prettify())
     print('LINK :' + link + imgurl["content"], title["content"], flush=True)
     status = download_single_file(imgurl["content"], title["content"], destination)
     if not status:
-        print("ERROR: img is downloaded", status)
+        print("WARNING: img is downloaded", status)
         link = 'https://drive.google.com/u/0/uc?id=' + id + '&export=download'
         status = download_single_file(link, title["content"], destination)
+        if not status:
+            print("ERROR: content downloaded directly", link, ', ', title["content"])
     return status
 
 def download_single_file(link, name, destination):
@@ -105,9 +109,12 @@ def download_single_file(link, name, destination):
             return True
         except Exception as inst:
             print(inst)
-            print('Encountered unknown error. Continuing.')
-            return False
+            print('Encountered unknown error. Continuing.', flush=True)
+            webbrowser.get("open -a /Applications/Google\ Chrome.app %s").open(link)
+            #input("continue...")
+            return True
     else:
+        print('SKIP : ' + link, ', ', name)
         return True
 
 
@@ -217,3 +224,5 @@ if __name__ == "__main__":
     create_url_list(url_list, 'urls.txt')
     download_all(load_url_list('urls.txt'), DST_DIR)
     download_all(url_list, DST_DIR)
+    move_files("src", "dst")
+    download_file("http://", str(Path.home()) + r'/Downloads')
