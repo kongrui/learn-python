@@ -3,13 +3,16 @@
 import os
 import os.path
 import re
+import requests
+
+from bs4 import BeautifulSoup
 import urllib.request
+import shutil
+import sys
+
 from pathlib import Path
 
-import requests
-from bs4 import BeautifulSoup
-
-DST_DIR = str(Path.home()) + r'/Downloads/downthemall'
+DST_DIR = str(Path.home()) + r'/Downloads/downloadamc'
 
 
 def fetch_url_list(url, patterns, yes_or_no=True):
@@ -45,9 +48,11 @@ def gdown_all(links, destination):
         else:
             print("ERROR -  GDOC : id is not found")
 
+
 def download_all(links, destination):
     for link in links:
         download_file(link, destination)
+
 
 def download_file(link, destination):
     if "drive.google.com" in link:
@@ -59,12 +64,12 @@ def download_file(link, destination):
             if status:
                 pass
             else:
-                print("ERROR:", link, flush=True)
+                print("ERROR: download content", link, flush=True)
             return
     else:
         status = download_single_file(link, None, destination)
         if not status:
-            print("ERROR:", link, flush=True)
+            print("ERROR: direct download", link, flush=True)
 
 
 def download_file_google_usercontent(link, destination):
@@ -74,10 +79,13 @@ def download_file_google_usercontent(link, destination):
     soup = BeautifulSoup(resp, from_encoding=resp.info().get_param('charset'), features="html.parser")
     title = soup.find("meta", property="og:title")
     imgurl = soup.find("meta", property="og:image")
-    # print(soup.prettify())
+    print(soup.prettify())
     print('LINK :' + link + imgurl["content"], title["content"], flush=True)
-    return download_single_file(imgurl["content"], title["content"], destination)
-
+    status = download_single_file(imgurl["content"], title["content"], destination)
+    if not status:
+        print("ERROR: img is downloaded", status)
+        status = download_single_file('https://drive.google.com/u/0/uc?id=' + id + '&export=download', destination)
+    return status
 
 def download_single_file(link, name, destination):
     link = link.strip()
@@ -87,12 +95,19 @@ def download_single_file(link, name, destination):
     if not os.path.isfile(filename):
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         try:
-            urllib.request.urlretrieve(link, filename)
+            local_filename, headers = urllib.request.urlretrieve(link, filename)
+            if 'image' in headers['Content-Type']:
+                os.remove(filename)
+                return False
+            else:
+                print("DOWNLOADED:", headers, ', ' + link, filename)
             return True
         except Exception as inst:
             print(inst)
             print('Encountered unknown error. Continuing.')
             return False
+    else:
+        return True
 
 
 def get_id_google_drive(link):
@@ -128,7 +143,7 @@ def download_file_google_drive(link, destination):
         name = get_file_name_google_drive(response)
 
     if not name:
-        print('Error with id=' + id)
+        print('Warning: id=' + id)
         return False
     else:
         dest_file = destination + '/' + name
@@ -181,6 +196,14 @@ def create_url_list(top_urls_list, dest_file):
 
 def load_url_list(src_file):
     return open(src_file).readlines()
+
+def move_files(src_d, dest_d):
+    for fname in os.listdir(src_d):
+        filename_dir = os.path.dirname(fname)
+        filename_w_ext = os.path.basename(fname)
+        filename, file_extension = os.path.splitext(filename_w_ext)
+        filename = filename.lower().replace(" ", "_")
+        shutil.copyfile(os.path.join(src_d, fname), os.path.join(dest_d, filename + file_extension))
 
 if __name__ == "__main__":
     patterns = []
