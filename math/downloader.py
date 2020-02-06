@@ -3,16 +3,12 @@
 import os
 import os.path
 import re
-import requests
-
-from bs4 import BeautifulSoup
-import urllib.request
 import shutil
-import sys
-
+import urllib.request
 from pathlib import Path
 
-DST_DIR = str(Path.home()) + r'/Downloads/downloadamc'
+import requests
+from bs4 import BeautifulSoup
 
 
 def fetch_url_list(url, patterns, yes_or_no=True):
@@ -84,7 +80,8 @@ def download_file_google_usercontent(link, destination):
     status = download_single_file(imgurl["content"], title["content"], destination)
     if not status:
         print("ERROR: img is downloaded", status)
-        status = download_single_file('https://drive.google.com/u/0/uc?id=' + id + '&export=download', destination)
+        link = 'https://drive.google.com/u/0/uc?id=' + id + '&export=download'
+        status = download_single_file(link, title["content"], destination)
     return status
 
 def download_single_file(link, name, destination):
@@ -97,6 +94,7 @@ def download_single_file(link, name, destination):
         try:
             local_filename, headers = urllib.request.urlretrieve(link, filename)
             if 'image' in headers['Content-Type']:
+                print("DELETE IMG:", link, ', ', filename)
                 os.remove(filename)
                 return False
             else:
@@ -206,6 +204,7 @@ def move_files(src_d, dest_d):
         shutil.copyfile(os.path.join(src_d, fname), os.path.join(dest_d, filename + file_extension))
 
 if __name__ == "__main__":
+    ST_DIR = str(Path.home()) + r'/Downloads'
     patterns = []
     patterns.append('https://drive.google.com')
     # patterns.append('pdf')
