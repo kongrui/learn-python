@@ -10,6 +10,9 @@ from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
 
+opener = urllib.request.build_opener()
+opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+urllib.request.install_opener(opener)
 
 def fetch_url_list(url, patterns, yes_or_no=True):
     urllst = []
