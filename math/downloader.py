@@ -17,6 +17,14 @@ urllib.request.install_opener(opener)
 
 URL_HEADER = 'https://link.google.com'
 
+def countdown(t, step=1, msg='sleeping'):  # in seconds
+    pad_str = ' ' * len('%d' % step)
+    for i in range(t, 0, -step):
+        print('%s for the next %d seconds %s\r' % (msg, i, pad_str))
+        sys.stdout.flush()
+        time.sleep(step)
+    print('Done %s for %d seconds!  %s' % (msg, t, pad_str))
+
 def read_multiline_file(url_file):
     data = open(url_file).readlines()
     data_cleaned = []
@@ -54,7 +62,7 @@ def download_file_v2(url, destination):
     if not os.path.exists(destination):
         print(url)
         try:
-            url = fetch_url(link)
+            url = fetch_url(url)
             myfile = requests.get(url)
             open(destination, 'wb').write(myfile.content)
         except:
