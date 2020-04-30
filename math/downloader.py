@@ -9,10 +9,57 @@ from pathlib import Path
 import webbrowser
 import requests
 from bs4 import BeautifulSoup
+import time
 
 opener = urllib.request.build_opener()
 opener.addheaders = [('User-agent', 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36')]
 urllib.request.install_opener(opener)
+
+URL_HEADER = 'https://link.google.com'
+
+def read_multiline_file(url_file):
+    data = open(url_file).readlines()
+    data_cleaned = []
+    for element in data:
+        element = element.strip()
+        if element:
+            data_cleaned.append(element)
+    for a, b, c, d, e in zip(*[iter(data_cleaned)]*5):
+        pos = e.rindex('=')
+        pn = e[pos+1:]
+
+
+def fetch_url(url):
+    resp = urllib.request.urlopen(url)
+    soup = BeautifulSoup(resp, from_encoding=resp.info().get_param('charset'), features="html.parser")
+    for link in soup.find_all('a', href=True):
+        title = link.get('title')
+        if title:
+            if title == 'Download':
+                return URL_HEADER + link.get('href')
+    return ''
+
+def download_file_v1(url, destination):
+    if not os.path.exists(destination):
+        print(url)
+        try:
+            url = fetch_url(url)
+            myfile = urllib.request.urlopen(url)
+            open(destination, 'wb').write(myfile.read())
+        except:
+            print("An exception occurred")
+            time.sleep(30)
+
+def download_file_v2(url, destination):
+    if not os.path.exists(destination):
+        print(url)
+        try:
+            url = fetch_url(link)
+            myfile = requests.get(url)
+            open(destination, 'wb').write(myfile.content)
+        except:
+            print("An exception occurred")
+            time.sleep(30)
 
 def fetch_url_list(url, patterns, yes_or_no=True):
     urllst = []
