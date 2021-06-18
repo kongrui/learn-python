@@ -18,8 +18,16 @@ if __name__ == "__main__":
             if not k in word_dict:
                 word_dict[k] = v
 
-print(word_dict)
-with open('output.2.csv', mode='w') as allwords_file:
+csv_reader = csv.reader(open(os.path.join(BASE_DIR, '../data/s-400-extra.csv')), delimiter=',')
+small_dict = dict()
+for row in csv_reader:
+    k = row[0].lower()
+    v = row[1].lower()
+    small_dict[k] = v
+
+existing = word_dict.keys()
+with open('output.small.csv', mode='w') as allwords_file:
     csvwriter = csv.writer(allwords_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    for key, value in word_dict.items():
-        csvwriter.writerow([key, value])
+    for k,v in small_dict.items():
+        if not k in existing:
+            csvwriter.writerow([k, v])
